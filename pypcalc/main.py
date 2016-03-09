@@ -6,6 +6,8 @@ import os
 import sys
 import socket
 
+from . import __version__
+
 COLORS = {
     "black": 30,
     "red": 31,
@@ -18,8 +20,15 @@ COLORS = {
 }
 
 
+if sys.version_info < (3, 0):
+    _bytes_type = str
+else:
+    _bytes_type = bytes
+
+
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='pypcalc')
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s v{0}'.format(__version__))
     mu = parser.add_mutually_exclusive_group(required=False)
     mu.add_argument('-a', '--show-all', action='store_true', help='Print a comprehensive overview (default')
     mu.add_argument('-n', '--show-network', action='store_true', help='Print network address')
@@ -45,6 +54,8 @@ def main():
     addresses = []
 
     for address in args.address:
+        if isinstance(address, _bytes_type):
+            address = address.decode('ascii')
         try:
             if '/' in address:
                 addr = ipaddress.ip_network(address, strict=False)
@@ -56,9 +67,19 @@ def main():
                 raise
             else:
                 try:
-                    for res in sorted(socket.getaddrinfo(address, None)):
-                        addr = ipaddress.ip_address(res[4][0])
-                        addresses.append((addr, res[4][0]))
+                    these_addresses = set()
+                    for res in sorted(
+                        socket.getaddrinfo(address, None, 0, 0, 0, socket.AI_ADDRCONFIG),
+                        key=lambda f: f[4][0]
+                    ):
+                        numeric = res[4][0]
+                        if isinstance(numeric, _bytes_type):
+                            numeric = numeric.decode('ascii')
+                        if numeric in these_addresses:
+                            continue
+                        these_addresses.add(numeric)
+                        addr = ipaddress.ip_address(numeric)
+                        addresses.append((addr, numeric))
                 except Exception:
                     raise
 
@@ -95,13 +116,15 @@ def main():
             rows = []
             rows.append(('Input', address))
             rows.append(('Base Address', base_addr, 'yellow', True))
-            rows.append(('Full Base Address', base_addr_full, 'yellow'))
+            rows.append(('Base Address (full)', base_addr_full, 'yellow'))
             rows.append(('Netmask', '{0} = {1}'.format(hostmask, prefixlen), 'red'))
             rows.append(('Hosts/Net', hosts_per, 'green'))
             if hosts_per > 1:
-                rows.append(('Broadcast', addr.broadcast_address, 'green'))
+                rows.append(('Broadcast', addr.broadcast_address.exploded, 'green'))
                 rows.append(('HostMin', addr.network_address + 1, 'green'))
+                rows.append(('HostMin (full)', (addr.network_address + 1).exploded, 'green'))
                 rows.append(('HostMax', addr.broadcast_address - 1, 'green'))
+                rows.append(('HostMax (full)', (addr.broadcast_address - 1).exploded, 'green'))
             for prop in sorted(('is_link_local', 'is_multicast', 'is_private', 'is_global',
                                 'is_loopback', 'is_reserved')):
                 if hasattr(addr, prop):
