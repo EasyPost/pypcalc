@@ -13,9 +13,9 @@ else:
 
 setup(
     name='pypcalc',
-    version='0.1',
-    author='James Brown',
-    author_email='jbrown@easypost.com',
+    version='0.2',
+    author='EasyPost OSS',
+    author_email='oss@easypost.com',
     url='https://github.com/easypost/pypcalc',
     license='ISC',
     packages=find_packages(exclude=['tests']),
@@ -24,7 +24,7 @@ setup(
     install_requires=install_requires,
     entry_points={
         'console_scripts': [
-            'pypcalc = pypcalc.main:main',
+            'pypcalc = pypcalc.__main__:main',
         ]
     },
     classifiers=[

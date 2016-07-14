@@ -88,6 +88,7 @@ def main():
         if hasattr(addr, 'network_address'):
             base_addr = addr.network_address
             base_addr_full = addr.network_address.exploded
+            netmask = addr.netmask
             hostmask = addr.hostmask
             prefixlen = addr.prefixlen
             hosts_per = 1 << (addr.max_prefixlen - prefixlen)
@@ -95,16 +96,18 @@ def main():
             base_addr = addr.compressed
             base_addr_full = addr.exploded
             if isinstance(addr, ipaddress.IPv4Address):
-                hostmask = '255.255.255.255'
+                netmask = '255.255.255.255'
+                hostmask = '0.0.0.0'
             elif isinstance(addr, ipaddress.IPv6Address):
-                hostmask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
+                netmask = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
+                hostmask = '::'
             prefixlen = addr.max_prefixlen
             hosts_per = 1
 
         if args.show_network:
             print('NETWORK={0}'.format(base_addr))
         elif args.show_netmask:
-            print('NETMASK={0}'.format(hostmask))
+            print('NETMASK={0}'.format(netmask))
         elif args.show_prefix:
             print('PREFIXLEN={0}'.format(prefixlen))
         elif args.show_broadcast:
@@ -117,7 +120,8 @@ def main():
             rows.append(('Input', address))
             rows.append(('Base Address', base_addr, 'yellow', True))
             rows.append(('Base Address (full)', base_addr_full, 'yellow'))
-            rows.append(('Netmask', '{0} = {1}'.format(hostmask, prefixlen), 'red'))
+            rows.append(('Netmask', '{0} = {1}'.format(netmask, prefixlen), 'red'))
+            rows.append(('Hostmask', '{0} = {1}'.format(hostmask, prefixlen), 'red'))
             rows.append(('Hosts/Net', hosts_per, 'green'))
             if hosts_per > 1:
                 rows.append(('Broadcast', addr.broadcast_address.exploded, 'green'))
