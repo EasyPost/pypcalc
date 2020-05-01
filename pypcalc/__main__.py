@@ -26,7 +26,7 @@ else:
     _bytes_type = bytes
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(prog='pypcalc')
     parser.add_argument('-V', '--version', action='version', version='%(prog)s v{0}'.format(__version__))
     mu = parser.add_mutually_exclusive_group(required=False)
@@ -39,17 +39,18 @@ def main():
     parser.add_argument('--color', choices=('never', 'auto', 'always'), default='auto',
                         help='When to colorize (default is "auto", which means to colorize if stdout is a TTY)')
     parser.add_argument('address', nargs='+', help='IP Address or Network')
-    args = parser.parse_args()
+    args = parser.parse_args(argv if argv is not None else sys.argv)
 
     def colorize(string, color, bold=False):
         if args.color == 'never':
-            return string
+            return str(string)
         if args.color == 'always' or os.isatty(sys.stdout.fileno()):
             return "\033[{0};{1}m{2}\033[0m".format(
                 '1' if bold else '0',
                 COLORS[color],
                 string
             )
+        return str(string)
 
     addresses = []
 
