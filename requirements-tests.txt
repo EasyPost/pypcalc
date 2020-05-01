@@ -4,3 +4,4 @@ zipp<2.0.0
 configparser>=3.5,<5.0.0
 pytest==4.6.*
 pytest-cov==2.8.*
+flake8==3.7.*
